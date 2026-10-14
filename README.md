@@ -3,7 +3,11 @@
 KiiBOOM Cybrix 16(키 16개 + 노브 3개 매크로 패드) 전용 키 설정 도구입니다. 맥과 윈도우 둘 다 쓸 수 있고, VIA 사이트 없이 바로 설정할 수 있습니다.
 설정은 **키보드 안에 저장**되므로, 집 맥에서 설정한 키보드를 회사 윈도우 PC에 꽂아도 그대로 동작합니다.
 
-## 실행 방법
+## 바로 열기 (설치 없음)
+
+👉 **https://withdino.github.io/KiiBOOM/** — Chrome 또는 Edge로 열면 어느 PC에서든 바로 사용할 수 있습니다.
+
+## 내 컴퓨터에서 실행하기
 
 필요한 것: **Google Chrome** 또는 **Microsoft Edge**. Safari와 Firefox는 키보드 연결(WebHID)을 지원하지 않습니다.
 

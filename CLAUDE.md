@@ -3,7 +3,7 @@
 Cybrix 16 키 설정 사이트 (맥 + 윈도우). `index.html` 하나로 동작(WebHID, Chrome/Edge), localhost:8716에서 실행.
 - 맥: `Cybrix16 맵퍼 열기 (맥).command` / 윈도우: `Cybrix16 맵퍼 열기 (윈도우).bat` → `windows/serve.ps1` (PowerShell HttpListener, index.html만 서빙)
 - 헤더의 🍎 맥 / 🪟 윈도우 전환은 표시·단축키 프리셋만 바꿈 (localStorage `cybrix16-os`). 키보드엔 같은 키코드가 저장됨
-- 저장소: https://github.com/withdino/KiiBOOM (private)
+- 저장소: https://github.com/withdino/KiiBOOM (public) · 사이트: https://withdino.github.io/KiiBOOM/ (`.github/workflows/pages.yml`이 index.html만 배포)
 
 ## 기기 정보
 - VID `0x5343` / PID `0x0080`, VIA raw HID(usage page `0xFF60`, usage `0x61`), **VIA 프로토콜 v12** (최신 QMK 키코드)
