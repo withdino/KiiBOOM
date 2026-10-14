@@ -1,0 +1,957 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cybrix 16 맵퍼</title>
+<style>
+:root{
+  --bg:#f4f4f6; --panel:#ffffff; --ink:#1d1d1f; --sub:#6e6e73; --line:#e3e3e8;
+  --accent:#0a84ff; --accent-soft:#e6f1ff; --ok:#1f9d55; --warn:#d97706; --bad:#d92d20;
+  --body1:#3a3b3f; --body2:#232427; --cap:#f7f7f8; --cap-ink:#1d1d1f; --cap-edge:#c9c9cf;
+  --radius:14px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#141416; --panel:#1e1e21; --ink:#f2f2f4; --sub:#9a9aa1; --line:#2e2e33;
+    --accent:#4ea1ff; --accent-soft:#1d2a3a; --cap:#2c2c30; --cap-ink:#f2f2f4; --cap-edge:#111;
+    --body1:#4a4b50; --body2:#2a2b2f;
+  }
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard",sans-serif;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;cursor:pointer}
+header{display:flex;align-items:center;gap:14px;padding:14px 24px;background:var(--panel);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+header h1{font-size:18px;margin:0;font-weight:700;letter-spacing:-.2px}
+header .status{display:flex;align-items:center;gap:8px;color:var(--sub);font-size:14px}
+.dot{width:9px;height:9px;border-radius:50%;background:#bbb}
+.dot.on{background:var(--ok)} .dot.demo{background:var(--warn)}
+header .sp{flex:1}
+.osSwitch{display:flex;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:3px}
+.osSwitch button{border:0;background:none;border-radius:7px;padding:5px 12px;font-weight:600;color:var(--sub)}
+.osSwitch button.on{background:var(--panel);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.15)}
+.btn{border:1px solid var(--line);background:var(--panel);border-radius:10px;padding:8px 14px;font-weight:600}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.danger{color:var(--bad)}
+.btn.small{padding:5px 10px;font-size:13px;font-weight:500}
+nav.tabs{display:flex;gap:4px;padding:0 24px;background:var(--panel);border-bottom:1px solid var(--line)}
+nav.tabs button{border:0;background:none;padding:12px 14px;font-weight:600;color:var(--sub);border-bottom:2px solid transparent}
+nav.tabs button.on{color:var(--ink);border-bottom-color:var(--accent)}
+main{max-width:1280px;margin:0 auto;padding:22px 24px 60px}
+.hidden{display:none!important}
+
+/* welcome */
+.welcome{max-width:640px;margin:40px auto;background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:36px}
+.welcome h2{margin:0 0 6px;font-size:24px}
+.welcome ol{padding-left:20px;color:var(--sub)} .welcome li{margin:6px 0}
+.welcome .row{display:flex;gap:10px;margin-top:22px;flex-wrap:wrap}
+.note{background:var(--accent-soft);border-radius:12px;padding:12px 14px;font-size:14px;margin-top:16px}
+.note.warn{background:#fff4e5;color:#7a4500}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .note.warn{background:#3a2a12;color:#ffd79a}}
+
+/* layout */
+.work{display:grid;grid-template-columns:minmax(0,1fr) 420px;gap:22px;align-items:start}
+@media (max-width:1000px){.work{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px}
+.card h3{margin:0 0 12px;font-size:15px}
+.layers{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
+.layers .lbl{color:var(--sub);font-size:13px;margin-right:4px}
+.layers button{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:6px 14px;font-weight:600;display:flex;align-items:center;gap:7px}
+.layers button i{width:9px;height:9px;border-radius:50%;display:inline-block}
+.layers button.on{background:var(--ink);color:var(--panel);border-color:var(--ink)}
+.hint{color:var(--sub);font-size:13px}
+
+/* device */
+.devwrap{overflow:hidden}
+.device{transform-origin:top left;background:linear-gradient(160deg,var(--body1),var(--body2));border-radius:26px;padding:22px;display:flex;gap:22px;width:max-content;margin:6px auto 14px;box-shadow:0 18px 40px -18px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.08)}
+.grid{display:grid;grid-template-columns:repeat(4,78px);grid-auto-rows:78px;gap:8px}
+.cap{position:relative;border:0;border-radius:12px;background:var(--cap);color:var(--cap-ink);box-shadow:inset 0 -5px 0 rgba(0,0,0,.12),0 2px 0 var(--cap-edge);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:6px;text-align:center;overflow:hidden;transition:transform .08s}
+.cap:hover{transform:translateY(-1px)}
+.cap .big{font-weight:700;font-size:16px;line-height:1.15;word-break:keep-all}
+.cap .small{font-size:10.5px;color:var(--sub);margin-top:3px;line-height:1.2;word-break:keep-all}
+.cap .no{position:absolute;top:4px;left:7px;font-size:9.5px;color:var(--sub);font-weight:600}
+.cap.sel{outline:3px solid var(--accent);outline-offset:2px}
+.cap.empty .big{color:var(--sub);font-weight:500}
+.cap.flash{animation:flash .6s}
+@keyframes flash{0%{background:#b6f0c9}100%{background:var(--cap)}}
+.knobs{display:flex;flex-direction:column;gap:14px;align-items:center;width:240px}
+.knobrow{display:flex;gap:16px}
+.knob{display:flex;flex-direction:column;align-items:center;gap:6px}
+.knob .face{border:0;border-radius:50%;background:radial-gradient(circle at 35% 30%,#8d8e93,#3c3d41 70%);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 4px 10px rgba(0,0,0,.4),inset 0 1px 1px rgba(255,255,255,.3);padding:6px;text-align:center}
+.knob.s .face{width:84px;height:84px}
+.knob.l .face{width:140px;height:140px}
+.knob .face .big{font-weight:700;font-size:13px;line-height:1.15}
+.knob.l .face .big{font-size:15px}
+.knob .face .small{font-size:10px;opacity:.75}
+.knob .face.sel{outline:3px solid var(--accent);outline-offset:3px}
+.knob .turns{display:flex;gap:6px}
+.turn{border:0;border-radius:8px;background:rgba(255,255,255,.12);color:#fff;font-size:11.5px;padding:4px 8px;max-width:118px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.turn.sel{background:var(--accent)}
+.knob .name{color:rgba(255,255,255,.55);font-size:11px}
+.legend{text-align:center;max-width:620px;margin:0 auto}
+
+/* picker */
+.target{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.target .pill{background:var(--accent-soft);color:var(--accent);border-radius:8px;padding:3px 9px;font-size:13px;font-weight:600}
+.target .cur{font-size:13px;color:var(--sub)}
+.search{width:100%;border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:10px 12px;font:inherit;color:inherit}
+.capture{display:flex;gap:8px;margin:10px 0}
+.capture .btn{flex:1}
+.capture .btn.listening{background:var(--warn);border-color:var(--warn);color:#fff}
+.mods{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:6px 0 12px;font-size:13px;color:var(--sub)}
+.mods button{border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:4px 10px;font-weight:700;font-size:14px}
+.mods button.on{background:var(--ink);color:var(--panel)}
+.cats{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px}
+.cats button{border:0;background:var(--bg);border-radius:999px;padding:5px 11px;font-size:13px;font-weight:600;color:var(--sub)}
+.cats button.on{background:var(--ink);color:var(--panel)}
+.opts{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:6px;max-height:430px;overflow:auto;padding:2px}
+.opt{border:1px solid var(--line);background:var(--panel);border-radius:10px;padding:8px;text-align:left;display:flex;flex-direction:column;gap:2px}
+.opt:hover{border-color:var(--accent);background:var(--accent-soft)}
+.opt .k{font-weight:700;font-size:14px}
+.opt .d{font-size:11.5px;color:var(--sub);line-height:1.25}
+.opt.cur{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
+.empty-pick{color:var(--sub);text-align:center;padding:40px 10px}
+
+/* lighting / macros / backup */
+.two{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+@media (max-width:900px){.two{grid-template-columns:1fr}}
+.field{margin:14px 0}
+.field label{display:flex;justify-content:space-between;font-weight:600;font-size:14px;margin-bottom:6px}
+.field label span{color:var(--sub);font-weight:500}
+select,input[type=range]{width:100%}
+select{border:1px solid var(--line);background:var(--bg);color:inherit;border-radius:10px;padding:9px;font:inherit}
+input[type=color]{width:100%;height:42px;border:1px solid var(--line);border-radius:10px;background:var(--bg);padding:3px}
+.macros{display:grid;grid-template-columns:220px 1fr;gap:22px}
+@media (max-width:800px){.macros{grid-template-columns:1fr}}
+.mlist{display:flex;flex-direction:column;gap:4px;max-height:560px;overflow:auto}
+.mlist button{border:1px solid transparent;background:none;border-radius:10px;padding:8px 10px;text-align:left;display:flex;gap:8px}
+.mlist button b{min-width:34px}
+.mlist button span{color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mlist button.on{background:var(--accent-soft);border-color:var(--accent)}
+textarea{width:100%;min-height:200px;border:1px solid var(--line);background:var(--bg);color:inherit;border-radius:12px;padding:12px;font:15px/1.5 ui-monospace,Menlo,monospace;resize:vertical}
+.tokens{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.err{color:var(--bad);font-size:13px;min-height:20px}
+.bigbtns{display:flex;flex-direction:column;gap:10px}
+.bigbtns .btn{padding:14px;text-align:left}
+.bigbtns .btn small{display:block;font-weight:400;color:var(--sub)}
+
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--panel);padding:11px 18px;border-radius:12px;font-weight:600;opacity:0;transition:.25s;pointer-events:none;z-index:20;width:max-content;max-width:90vw}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.bad{background:var(--bad);color:#fff}
+.busy{position:fixed;inset:0;background:rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center;z-index:30;color:#fff;font-weight:700;font-size:17px}
+</style>
+</head>
+<body>
+<header>
+  <h1>⌨️ Cybrix 16 맵퍼</h1>
+  <div class="status"><span class="dot" id="dot"></span><span id="statusText">연결 안 됨</span></div>
+  <div class="sp"></div>
+  <div class="osSwitch" id="osSwitch" title="이 키보드를 어느 컴퓨터에서 쓸지 고르세요. 단축키 목록과 표시가 바뀝니다.">
+    <button data-os="mac">🍎 맥</button><button data-os="win">🪟 윈도우</button>
+  </div>
+  <button class="btn hidden" id="btnDisconnect">연결 끊기</button>
+</header>
+<nav class="tabs hidden" id="tabs">
+  <button data-tab="keys" class="on">키 설정</button>
+  <button data-tab="light">조명</button>
+  <button data-tab="macro">텍스트 매크로</button>
+  <button data-tab="backup">백업 · 초기화</button>
+</nav>
+
+<main>
+  <!-- 시작 화면 -->
+  <section class="welcome" id="welcome">
+    <h2>안녕하세요 👋</h2>
+    <p style="color:var(--sub);margin-top:0">KiiBOOM Cybrix 16 전용 키 설정 도구입니다. 바꾼 내용은 키보드에 바로 저장되며, 다른 맥이나 윈도우 PC에 꽂아도 그대로 유지됩니다.</p>
+    <ol>
+      <li>Cybrix 16을 USB 케이블로 컴퓨터에 연결하세요. (무선/블루투스 모드에서는 설정할 수 없어요)</li>
+      <li>아래 <b>키보드 연결</b>을 누르고, 뜨는 창에서 <b>Kiiboom Cybrix 16</b>을 선택한 뒤 <b>연결</b>을 누르세요.</li>
+      <li>바꾸고 싶은 키를 클릭하고, 오른쪽 목록에서 원하는 기능을 고르면 끝!</li>
+    </ol>
+    <div class="row">
+      <button class="btn primary" id="btnConnect">🔌 키보드 연결</button>
+      <button class="btn" id="btnDemo">체험 모드 (키보드 없이 둘러보기)</button>
+    </div>
+    <div class="note warn hidden" id="noHid">이 브라우저는 키보드 연결 기능(WebHID)을 지원하지 않아요. <b>Google Chrome</b> 또는 <b>Microsoft Edge</b>로 열어 주세요. (Safari·Firefox는 지원하지 않습니다)</div>
+    <div class="note hidden" id="connErr"></div>
+  </section>
+
+  <!-- 키 설정 -->
+  <section id="tab-keys" class="hidden">
+    <div class="work">
+      <div class="card">
+        <div class="layers" id="layers"></div>
+        <div class="devwrap" id="devwrap"><div class="device" id="device"></div></div>
+        <div class="legend hint" id="legend"></div>
+      </div>
+      <div class="card" id="picker"></div>
+    </div>
+  </section>
+
+  <!-- 조명 -->
+  <section id="tab-light" class="hidden">
+    <div class="two" id="lightPanels"></div>
+    <p class="hint" style="margin-top:14px">조명 설정은 바꾸는 즉시 키보드에 저장됩니다.</p>
+  </section>
+
+  <!-- 매크로 -->
+  <section id="tab-macro" class="hidden">
+    <div class="card macros">
+      <div>
+        <h3>매크로 목록</h3>
+        <div class="mlist" id="mlist"></div>
+      </div>
+      <div>
+        <h3 id="mtitle">매크로</h3>
+        <p class="hint" style="margin-top:-6px">키 하나로 긴 문장을 자동으로 입력해요. 예: 이메일 주소, 자주 쓰는 인사말, 서명 등.<br>
+          만든 다음 <b>키 설정</b> 탭에서 원하는 키에 <b>매크로</b> 카테고리의 이 매크로를 지정하세요.</p>
+        <textarea id="mtext" placeholder="여기에 입력할 내용을 적으세요. 예) hongildong@example.com"></textarea>
+        <div class="tokens">
+          <span class="hint" style="align-self:center">특수 동작 넣기:</span>
+          <button class="btn small" data-tok="{enter}">⏎ 엔터</button>
+          <button class="btn small" data-tok="{tab}">⇥ 탭</button>
+          <button class="btn small" data-tok="{esc}">Esc</button>
+          <button class="btn small" data-tok="{wait:500}">⏱ 0.5초 쉬기</button>
+        </div>
+        <div class="err" id="merr"></div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="btn primary" id="msave">매크로 저장</button>
+          <button class="btn" id="mclear">비우기</button>
+          <span class="hint" id="mspace"></span>
+        </div>
+        <div class="note">⚠️ 매크로는 <b>영문·숫자·기호만</b> 입력할 수 있어요. 한글은 컴퓨터의 입력기를 거쳐야 해서 키보드가 직접 입력할 수 없습니다. 매크로가 실행될 때 입력 상태가 <b>영문</b>이어야 정확히 입력돼요.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 백업 -->
+  <section id="tab-backup" class="hidden">
+    <div class="two">
+      <div class="card">
+        <h3>백업</h3>
+        <p class="hint">지금 설정(모든 레이어의 키, 노브, 매크로, 조명)을 파일로 저장해 두면 언제든 되돌릴 수 있어요.</p>
+        <div class="bigbtns">
+          <button class="btn" id="bkSave">💾 설정을 파일로 저장<small>cybrix16-설정-날짜.json 파일이 다운로드 폴더에 저장됩니다</small></button>
+          <button class="btn" id="bkLoad">📂 파일에서 설정 불러오기<small>저장해 둔 파일의 설정을 키보드에 그대로 덮어씁니다</small></button>
+          <input type="file" id="bkFile" accept=".json,application/json" class="hidden">
+        </div>
+      </div>
+      <div class="card">
+        <h3>공장 초기화</h3>
+        <p class="hint">키 배치와 노브 설정을 처음 샀을 때 상태로 되돌립니다. 매크로는 선택해서 함께 지울 수 있어요. 진행 전에 자동으로 백업 파일을 저장합니다.</p>
+        <div class="bigbtns">
+          <button class="btn danger" id="rsKeys">↺ 키·노브 설정 초기화<small>모든 레이어의 키와 노브를 기본값으로</small></button>
+          <button class="btn danger" id="rsMacros">🗑 매크로 모두 지우기</button>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="toast" id="toast"></div>
+<div class="busy hidden" id="busy">잠시만요…</div>
+
+<script>
+"use strict";
+/* ============================================================
+   Cybrix 16 정보 (실제 기기에서 확인: VIA 프로토콜 v12)
+   ============================================================ */
+const VID = 0x5343, PID = 0x0080;
+const ROWS = 5, COLS = 4;
+// 노브: 누르기는 키 매트릭스의 4번째 줄에 있음
+const KNOBS = [
+  {id:0, name:"왼쪽 작은 노브", size:"s", press:[4,2]},
+  {id:1, name:"오른쪽 작은 노브", size:"s", press:[4,1]},
+  {id:2, name:"큰 노브", size:"l", press:[4,3]},
+];
+// 레이어 색 = 작은 노브 아래 표시등 색 (0부터 셈)
+const LAYER_NAMES  = ["Red","Green","Deep Blue","Yellow","Pink","Blue"];
+const LAYER_COLORS = ["#ff3b30","#34c759","#1c3faa","#ffcc00","#ff6fb5","#32ade6"];
+const layerName = n => n<LAYER_NAMES.length ? `${n} ${LAYER_NAMES[n]}` : `레이어 ${n}`;
+
+/* ============================================================
+   키코드 사전 (QMK, VIA 프로토콜 v12 기준)
+   ============================================================ */
+const MOD = {CTL:0x0100, SFT:0x0200, ALT:0x0400, GUI:0x0800, RIGHT:0x1000};
+const BASIC = {}; // code -> [표시, 설명]
+const add = (c, k, d="") => BASIC[c] = [k, d];
+"ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").forEach((ch,i)=>add(0x04+i, ch, ch+" 키"));
+"1234567890".split("").forEach((ch,i)=>add(0x1E+i, ch, "숫자 "+ch));
+[[0x28,"⏎","엔터"],[0x29,"Esc","ESC"],[0x2A,"⌫","백스페이스(지우기)"],[0x2B,"⇥","탭"],[0x2C,"Space","스페이스"],
+ [0x2D,"-","빼기/하이픈"],[0x2E,"=","등호"],[0x2F,"[","왼쪽 대괄호"],[0x30,"]","오른쪽 대괄호"],[0x31,"\\","원화/백슬래시"],
+ [0x33,";","세미콜론"],[0x34,"'","따옴표"],[0x35,"`","백틱"],[0x36,",","쉼표"],[0x37,".","마침표"],[0x38,"/","슬래시"],
+ [0x39,"Caps Lock","캡스락 (한/영 전환으로 쓰는 경우 많음)"],
+ [0x46,"PrtSc","Print Screen"],[0x47,"ScrLk","Scroll Lock"],[0x48,"Pause","Pause"],[0x49,"Insert","Insert"],
+ [0x4A,"Home","줄 처음"],[0x4B,"PgUp","페이지 위로"],[0x4C,"⌦","Delete(앞으로 지우기)"],[0x4D,"End","줄 끝"],[0x4E,"PgDn","페이지 아래로"],
+ [0x4F,"→","오른쪽 화살표"],[0x50,"←","왼쪽 화살표"],[0x51,"↓","아래쪽 화살표"],[0x52,"↑","위쪽 화살표"],
+ [0x53,"NumLk","Num Lock / Clear"],[0x54,"÷","숫자패드 /"],[0x55,"×","숫자패드 *"],[0x56,"−","숫자패드 -"],[0x57,"+","숫자패드 +"],[0x58,"⏎","숫자패드 엔터"],
+ [0x90,"한/영","한/영 전환 (윈도우)"],[0x91,"한자","한자 변환 (윈도우)"],[0x62,"0","숫자패드 0"],[0x63,".","숫자패드 ."],[0x67,"=","숫자패드 ="],[0x65,"Menu","메뉴 키"],
+].forEach(a=>add(...a));
+for(let i=1;i<=9;i++) add(0x58+i, String(i), "숫자패드 "+i);
+for(let i=1;i<=12;i++) add(0x39+i, "F"+i, "F"+i+" 기능키");
+for(let i=13;i<=24;i++) add(0x68+i-13, "F"+i, "F"+i+" 기능키");
+add(0x6D, "F18", "Claude 열기 (Raycast 단축키)");
+add(0x6E, "F19", "노션 페이지 열기 (Raycast 스크립트)");
+[[0xA5,"⏻","전원"],[0xA6,"잠자기","시스템 잠자기"],[0xA8,"🔇","음소거"],[0xA9,"🔊","볼륨 크게"],[0xAA,"🔉","볼륨 작게"],
+ [0xAB,"⏭","다음 곡"],[0xAC,"⏮","이전 곡"],[0xAD,"⏹","정지"],[0xAE,"⏯","재생/일시정지"],[0xAF,"미디어","미디어 선택"],[0xB0,"⏏","꺼내기"],
+ [0xB1,"메일","메일 앱"],[0xB2,"계산기","계산기 (맥 미지원)"],[0xB3,"내 컴퓨터","내 PC 열기 (윈도우 전용)"],[0xB4,"웹 검색","윈도우 전용"],
+ [0xB5,"웹 홈","브라우저 홈 (윈도우 전용)"],[0xB6,"웹 뒤로","브라우저 뒤로"],[0xB7,"웹 앞으로","브라우저 앞으로"],[0xB8,"웹 정지",""],[0xB9,"웹 새로고침",""],[0xBA,"즐겨찾기",""],
+ [0xBB,"⏩","빨리 감기"],[0xBC,"⏪","되감기"],[0xBD,"🔆","화면 밝게"],[0xBE,"🔅","화면 어둡게"],[0xBF,"제어판","윈도우 전용"],[0xC0,"어시스턴트",""],
+ [0xC1,"Mission Control","열린 창 한눈에 보기"],[0xC2,"Launchpad","앱 목록"],
+ [0xCD,"🖱↑","마우스 위로"],[0xCE,"🖱↓","마우스 아래로"],[0xCF,"🖱←","마우스 왼쪽"],[0xD0,"🖱→","마우스 오른쪽"],
+ [0xD1,"좌클릭","마우스 왼쪽 버튼"],[0xD2,"우클릭","마우스 오른쪽 버튼"],[0xD3,"휠 클릭","마우스 가운데 버튼"],
+ [0xD9,"휠 ↑","스크롤 위로"],[0xDA,"휠 ↓","스크롤 아래로"],[0xDB,"휠 ←","스크롤 왼쪽"],[0xDC,"휠 →","스크롤 오른쪽"],
+ [0xE0,"⌃","왼쪽 Control"],[0xE1,"⇧","왼쪽 Shift"],[0xE2,"⌥","왼쪽 Option"],[0xE3,"⌘","왼쪽 Command"],
+ [0xE4,"⌃ R","오른쪽 Control"],[0xE5,"⇧ R","오른쪽 Shift"],[0xE6,"⌥ R","오른쪽 Option"],[0xE7,"⌘ R","오른쪽 Command"],
+].forEach(a=>add(...a));
+
+const RGBK = {0x7820:["조명 켜기/끄기","조명 ON/OFF"],0x7821:["다음 효과","조명 효과 바꾸기"],0x7822:["이전 효과","조명 효과 이전"],
+  0x7823:["색상 +","색상 바꾸기"],0x7824:["색상 −","색상 바꾸기"],0x7825:["채도 +","색 진하게"],0x7826:["채도 −","색 연하게"],
+  0x7827:["밝기 +","조명 밝게"],0x7828:["밝기 −","조명 어둡게"],0x7829:["속도 +","효과 빠르게"],0x782A:["속도 −","효과 느리게"],
+  0x782B:["단색","단색 모드"],0x782C:["숨쉬기","숨쉬기 효과"],0x782D:["무지개","무지개 효과"],0x782E:["소용돌이","소용돌이 효과"]};
+
+// 맥에서 자주 쓰는 단축키
+const G=MOD.GUI, S=MOD.SFT, A=MOD.ALT, C=MOD.CTL;
+const MAC = [
+  [G|0x06,"복사"],[G|0x19,"붙여넣기"],[G|0x1B,"잘라내기"],[G|0x1D,"실행 취소"],[G|S|0x1D,"다시 실행"],
+  [G|0x04,"전체 선택"],[G|0x16,"저장"],[G|0x09,"찾기"],[G|0x13,"인쇄"],[G|0x11,"새로 만들기"],[G|0x12,"열기"],
+  [G|0x17,"새 탭"],[G|0x1A,"탭/창 닫기"],[G|S|0x17,"닫은 탭 다시 열기"],[C|0x2B,"다음 탭"],[C|S|0x2B,"이전 탭"],[G|0x15,"새로고침"],
+  [G|0x2F,"뒤로"],[G|0x30,"앞으로"],[G|0x2E,"확대"],[G|0x2D,"축소"],[G|0x27,"실제 크기"],
+  [G|0x2B,"앱 전환"],[G|0x35,"같은 앱 창 전환"],[G|0x0B,"앱 가리기"],[G|0x10,"창 최소화"],[G|0x14,"앱 종료"],[G|A|0x29,"강제 종료 창"],
+  [G|0x2C,"Spotlight 검색"],[C|0x2C,"입력 소스 전환(한/영)"],[0x39,"Caps Lock 한/영"],[C|G|0x2C,"이모지 · 기호"],
+  [G|S|0x20,"전체 화면 캡처"],[G|S|0x21,"영역 캡처"],[G|S|0x22,"캡처 도구"],[C|G|S|0x21,"영역 캡처→클립보드"],
+  [0xC1,"Mission Control"],[0xC2,"Launchpad"],[C|0x50,"왼쪽 데스크톱"],[C|0x4F,"오른쪽 데스크톱"],[C|0x52,"Mission Control"],[C|0x51,"앱 창 모아보기"],
+  [C|G|0x09,"전체 화면 전환"],[C|G|0x14,"화면 잠금"],[G|0x36,"설정(환경설정)"],[A|S|G|0x19,"서식 없이 붙여넣기"],
+  [G|0x2A,"휴지통으로 이동"],[G|S|0x2A,"휴지통 비우기"],[G|S|0x11,"새 폴더"],[G|0x08,"이메일 보내기·Finder 파일 꺼내기"],
+  [G|0x05,"굵게"],[G|0x0C,"기울임"],[G|0x18,"밑줄"],[G|0x0E,"링크 넣기"],
+  [G|0x50,"줄 처음으로"],[G|0x4F,"줄 끝으로"],[G|0x52,"문서 처음으로"],[G|0x51,"문서 끝으로"],[A|0x50,"단어 왼쪽"],[A|0x4F,"단어 오른쪽"],
+];
+// 윈도우에서 자주 쓰는 단축키
+const WIN = [
+  [C|0x06,"복사"],[C|0x19,"붙여넣기"],[C|0x1B,"잘라내기"],[C|0x1D,"실행 취소"],[C|0x1C,"다시 실행"],
+  [C|0x04,"전체 선택"],[C|0x16,"저장"],[C|0x09,"찾기"],[C|0x13,"인쇄"],[C|0x11,"새로 만들기"],[C|0x12,"열기"],
+  [C|0x17,"새 탭"],[C|0x1A,"탭 닫기"],[C|S|0x17,"닫은 탭 다시 열기"],[C|0x2B,"다음 탭"],[C|S|0x2B,"이전 탭"],[0x3E,"새로고침"],
+  [A|0x50,"뒤로"],[A|0x4F,"앞으로"],[C|0x2E,"확대"],[C|0x2D,"축소"],[C|0x27,"실제 크기"],
+  [A|0x2B,"앱 전환"],[G|0x2B,"작업 보기"],[A|0x3D,"창/앱 닫기"],[C|S|0x29,"작업 관리자"],
+  [0xE3,"시작 메뉴"],[G|0x16,"검색"],[0x90,"한/영 전환"],[0x91,"한자 변환"],[G|0x37,"이모지"],[G|0x19,"클립보드 기록"],
+  [G|S|0x16,"영역 캡처"],[0x46,"전체 화면 캡처"],[A|0x46,"현재 창 캡처"],
+  [G|0x07,"바탕화면 보기"],[G|0x10,"모든 창 최소화"],[G|0x08,"파일 탐색기"],[G|0x0C,"설정"],[G|0x0F,"화면 잠금"],[G|0x13,"실행(Run)"],
+  [G|C|0x50,"왼쪽 가상 데스크톱"],[G|C|0x4F,"오른쪽 가상 데스크톱"],[G|C|0x07,"새 가상 데스크톱"],
+  [G|0x52,"창 최대화"],[G|0x51,"창 최소화"],[G|0x50,"창 왼쪽에 붙이기"],[G|0x4F,"창 오른쪽에 붙이기"],
+  [C|S|0x19,"서식 없이 붙여넣기"],[0x3B,"이름 바꾸기"],[S|0x4C,"영구 삭제"],[C|S|0x11,"새 폴더"],
+  [C|0x05,"굵게"],[C|0x0C,"기울임"],[C|0x18,"밑줄"],[C|0x0E,"링크 넣기"],
+  [C|0x4A,"문서 처음으로"],[C|0x4D,"문서 끝으로"],[C|0x50,"단어 왼쪽"],[C|0x4F,"단어 오른쪽"],
+];
+const MAC_DESC = {}; MAC.forEach(([c,d])=>{ if(!(c in MAC_DESC)) MAC_DESC[c]=d; });
+const WIN_DESC = {}; WIN.forEach(([c,d])=>{ if(!(c in WIN_DESC)) WIN_DESC[c]=d; });
+const MAC_ONLY = new Set([0xC1,0xC2]);
+
+// 맥 / 윈도우 모드 (표시와 단축키 목록만 바뀜. 키보드에는 같은 키코드가 저장됨)
+const OS_KEY = "cybrix16-os";
+let OS = (()=>{ try{ const v=localStorage.getItem(OS_KEY); if(v==="mac"||v==="win") return v; }catch(e){}
+  return /win/i.test(navigator.userAgentData?.platform || navigator.platform || "") ? "win" : "mac"; })();
+const curDesc = () => OS==="win" ? WIN_DESC : MAC_DESC;
+const presets = () => OS==="win" ? WIN : MAC;
+const osName = () => OS==="win" ? "윈도우" : "맥";
+
+function modSymbols(code){
+  if(OS==="win"){
+    const p=[]; if(code&MOD.CTL) p.push("Ctrl"); if(code&MOD.SFT) p.push("Shift"); if(code&MOD.ALT) p.push("Alt"); if(code&MOD.GUI) p.push("Win");
+    return p.length ? p.join("+")+"+" : "";
+  }
+  let s="";
+  if(code&MOD.CTL) s+="⌃"; if(code&MOD.ALT) s+="⌥"; if(code&MOD.SFT) s+="⇧"; if(code&MOD.GUI) s+="⌘";
+  return s;
+}
+const WIN_MODKEYS = {0xE0:"Ctrl",0xE1:"Shift",0xE2:"Alt",0xE3:"Win",0xE4:"Ctrl R",0xE5:"Shift R",0xE6:"Alt R",0xE7:"Win R"};
+const WIN_MODDESC = {0xE0:"왼쪽 Ctrl",0xE1:"왼쪽 Shift",0xE2:"왼쪽 Alt",0xE3:"윈도우 키",0xE4:"오른쪽 Ctrl",0xE5:"오른쪽 Shift",0xE6:"오른쪽 Alt",0xE7:"오른쪽 윈도우 키"};
+function hex(c){ return "0x"+c.toString(16).toUpperCase().padStart(4,"0"); }
+
+// 키코드 → {big, small}
+function describe(code){
+  if(code===0x0000) return {big:"없음", small:"아무 동작 안 함", empty:true};
+  if(code===0x0001) return {big:"▽", small:"아래 레이어와 같음", empty:true};
+  if(code<=0xFF){
+    if(OS==="win" && WIN_MODKEYS[code]) return {big:WIN_MODKEYS[code], small: WIN_DESC[code] || WIN_MODDESC[code]};
+    const b = BASIC[code];
+    if(b){ let small = curDesc()[code] || b[1]; if(OS==="win" && MAC_ONLY.has(code)) small += " (맥 전용)"; return {big:b[0], small}; }
+    return {big:hex(code), small:"기타 키"};
+  }
+  if(code>=0x0100 && code<=0x1FFF){
+    const kc = code&0xFF, b = BASIC[kc];
+    const k = b ? b[0] : hex(kc);
+    let small = curDesc()[code];
+    if(!small && OS==="mac" && (code&0x1F00)===MOD.CTL && MAC_DESC[MOD.GUI|kc]) small = `윈도우식 ${MAC_DESC[MOD.GUI|kc]} · 맥은 ⌘${k}`;
+    if(!small && OS==="win" && (code&0x1F00)===MOD.GUI && WIN_DESC[MOD.CTL|kc]) small = `맥식 ${WIN_DESC[MOD.CTL|kc]} · 윈도우는 Ctrl+${k}`;
+    if(!small){ const other = OS==="win" ? MAC_DESC : WIN_DESC; if(other[code]) small = `${OS==="win"?"맥":"윈도우"}용 ${other[code]}`; }
+    return {big: modSymbols(code)+k, small: small || "조합 단축키"};
+  }
+  const n = code&0x1F;
+  if(code>=0x5200 && code<=0x521F) return {big:"→ "+layerName(n), small:layerName(n)+" 레이어로 이동"};
+  if(code>=0x5220 && code<=0x523F) return {big:layerName(n)+" (누르는 동안)", small:"누르고 있는 동안만"};
+  if(code>=0x5240 && code<=0x525F) return {big:"기본 "+layerName(n), small:"기본 레이어 변경"};
+  if(code>=0x5260 && code<=0x527F) return {big:layerName(n)+" 켜고/끄기", small:"토글"};
+  if(code>=0x5280 && code<=0x529F) return {big:layerName(n)+" 한 번", small:"다음 키 하나만"};
+  if(code>=0x7700 && code<=0x771F){ const i=code-0x7700; return {big:"매크로 "+(i+1), small: macroPreview(i)}; }
+  if(RGBK[code]) return {big:"💡 "+RGBK[code][0], small:RGBK[code][1]};
+  if(code===0x7E00) return {big:"USB", small:"USB 모드 전환"};
+  if(code>=0x4000 && code<=0x4FFF){ const b=BASIC[code&0xFF]; return {big:(b?b[0]:"?")+" / "+layerName((code>>8)&0xF), small:"탭: 키 · 길게: 레이어"}; }
+  if(code>=0x2000 && code<=0x3FFF){ const b=BASIC[code&0xFF]; return {big:(b?b[0]:"?")+" / "+modSymbols(((code>>8)&0xF)<<8), small:"탭: 키 · 길게: 보조키"}; }
+  return {big:hex(code), small:"특수 기능"};
+}
+const isLayerKey = c => c>=0x5200 && c<=0x52FF || (c>=0x4000 && c<=0x4FFF);
+
+/* ============================================================
+   통신 (VIA raw HID, 32바이트)
+   ============================================================ */
+class HidTransport {
+  constructor(dev){ this.dev=dev; this.chain=Promise.resolve(); this.waiter=null;
+    dev.addEventListener("inputreport", e=>{ if(this.waiter){ const w=this.waiter; this.waiter=null; w(new Uint8Array(e.data.buffer)); } });
+  }
+  send(bytes){
+    const run = () => new Promise(async (resolve,reject)=>{
+      const buf = new Uint8Array(32); buf.set(bytes);
+      const t = setTimeout(()=>{ this.waiter=null; reject(new Error("키보드 응답 없음")); }, 2000);
+      this.waiter = d=>{ clearTimeout(t); resolve(d); };
+      try{ await this.dev.sendReport(0, buf); }catch(e){ clearTimeout(t); this.waiter=null; reject(e); }
+    });
+    const p = this.chain.then(run, run); this.chain = p.catch(()=>{}); return p;
+  }
+}
+
+// 체험 모드: 실제 Cybrix 16의 기본 설정을 흉내내는 가짜 키보드
+class FakeTransport {
+  constructor(){
+    const L0=[0x00B3,0x0024,0x0025,0x0026, 0x00B5,0x0021,0x0022,0x0023, 0x011B,0x001E,0x001F,0x0020, 0x0106,0x0119,0x0027,0x0037, 0x0001,0x00AE,0x7820,0x5201];
+    const L1=[0x0039,0x7700,0,0, 0,0,0,0, 0x007C,0x007D,0x00C1,0, 0x00E3,0x00E3,0,0, 0,0,0,0x5202];
+    const L5=[0x7820,0x7821,0x7822,0x7824, 0x7823,0x7826,0x7825,0x7828, 0x7827,0x782A,0x7829,0x782B, 0x782C,0x782D,0,0, 0,0,0,0x5200];
+    const blank=n=>[...Array(16).fill(0),0,0,0,0x5200+n];
+    const L2=blank(3); L2[0]=0x006D; L2[8]=0x006E; this.km=[L0,L1,L2,blank(4),blank(5),L5].flat();
+    this.enc=Array(6*3*2).fill(0); [0x4B,0x4E,0xAC,0xAB,0xA9,0xAA].forEach((v,i)=>this.enc[i]=v);
+    this.light={2:{1:[255],2:[0],3:[3],4:[192,255]},3:{1:[200],2:[1],3:[128],4:[150,255]}};
+    this.macro=new Uint8Array(3743); this.layers=6;
+  }
+  async send(b){
+    const r=new Uint8Array(32); r.set(b.slice(0,32)); await new Promise(z=>setTimeout(z,1));
+    const off=(b[1]<<8)|b[2];
+    switch(b[0]){
+      case 0x01: r[1]=0; r[2]=12; break;
+      case 0x11: r[1]=this.layers; break;
+      case 0x04: { const i=(b[1]*ROWS+b[2])*COLS+b[3]; r[4]=this.km[i]>>8; r[5]=this.km[i]&255; break; }
+      case 0x05: { const i=(b[1]*ROWS+b[2])*COLS+b[3]; this.km[i]=(b[4]<<8)|b[5]; break; }
+      case 0x12: for(let j=0;j<b[3];j++){ const w=this.km[(off+j)>>1]||0; r[4+j]=((off+j)&1)?w&255:w>>8; } break;
+      case 0x14: { const i=(b[1]*3+b[2])*2+b[3]; r[4]=this.enc[i]>>8; r[5]=this.enc[i]&255; break; }
+      case 0x15: { const i=(b[1]*3+b[2])*2+b[3]; this.enc[i]=(b[4]<<8)|b[5]; break; }
+      case 0x08: { const v=this.light[b[1]]?.[b[2]]||[0]; v.forEach((x,j)=>r[3+j]=x); break; }
+      case 0x07: { if(this.light[b[1]]) this.light[b[1]][b[2]]=[b[3],b[4]]; break; }
+      case 0x09: break;
+      case 0x0C: r[1]=20; break;
+      case 0x0D: r[1]=this.macro.length>>8; r[2]=this.macro.length&255; break;
+      case 0x0E: for(let j=0;j<b[3];j++) r[4+j]=this.macro[off+j]||0; break;
+      case 0x0F: for(let j=0;j<b[3];j++) this.macro[off+j]=b[4+j]; break;
+      case 0x10: this.macro.fill(0); break;
+      case 0x06: this.km=new FakeTransport().km; this.enc=new FakeTransport().enc; break;
+      default: r[0]=0xFF;
+    }
+    return r;
+  }
+}
+
+/* ============================================================
+   상태
+   ============================================================ */
+const st = {
+  t:null, demo:false, layers:0, km:[], enc:[], layer:0,
+  sel:{type:"key", row:0, col:0}, cat:"os", query:"", mods:0, listening:false,
+  macroCount:0, macroSize:0, macros:[], mSel:0, light:{},
+};
+const kmIdx=(l,r,c)=>(l*ROWS+r)*COLS+c;
+const getKey=(l,r,c)=>st.km[kmIdx(l,r,c)];
+const encIdx=(l,id,cw)=>(l*3+id)*2+(cw?1:0);
+
+async function cmd(...b){
+  const r = await st.t.send(b);
+  if(r[0]===0xFF) throw new Error("키보드가 이 명령을 지원하지 않아요 ("+b[0]+")");
+  return r;
+}
+
+async function loadAll(){
+  const v = await cmd(0x01); const proto=(v[1]<<8)|v[2];
+  if(proto<12){ throw new Error("키보드 펌웨어의 VIA 버전("+proto+")이 이 도구와 맞지 않습니다."); }
+  st.layers = (await cmd(0x11))[1];
+  // 키맵 한 번에 읽기
+  const total = st.layers*ROWS*COLS*2, bytes=new Uint8Array(total);
+  for(let off=0; off<total; off+=28){
+    const n=Math.min(28,total-off), r=await cmd(0x12, off>>8, off&255, n);
+    bytes.set(r.slice(4,4+n), off);
+  }
+  st.km=[]; for(let i=0;i<total;i+=2) st.km.push((bytes[i]<<8)|bytes[i+1]);
+  st.enc=[];
+  for(let l=0;l<st.layers;l++) for(let id=0;id<3;id++) for(const cw of [0,1]){
+    const r=await cmd(0x14,l,id,cw); st.enc.push((r[4]<<8)|r[5]);
+  }
+  for(const ch of [3,2]){ st.light[ch]={};
+    for(const id of [1,2,3,4]){ try{ const r=await cmd(0x08,ch,id); st.light[ch][id]=[r[3],r[4]]; }catch(e){ st.light[ch]=null; break; } }
+  }
+  await loadMacros();
+}
+
+async function loadMacros(){
+  try{
+    st.macroCount=(await cmd(0x0C))[1];
+    const s=await cmd(0x0D); st.macroSize=(s[1]<<8)|s[2];
+  }catch(e){ st.macroCount=0; st.macros=[]; return; }
+  const buf=[]; let nulls=0;
+  for(let off=0; off<st.macroSize && nulls<st.macroCount; off+=28){
+    const n=Math.min(28,st.macroSize-off), r=await cmd(0x0E,off>>8,off&255,n);
+    for(let j=0;j<n;j++){ buf.push(r[4+j]); if(r[4+j]===0 && ++nulls>=st.macroCount) break; }
+  }
+  st.macros=[]; let cur=[];
+  for(const x of buf){ if(x===0){ st.macros.push(cur); cur=[]; } else cur.push(x); if(st.macros.length>=st.macroCount) break; }
+  while(st.macros.length<st.macroCount) st.macros.push([]);
+}
+
+async function setKey(l,r,c,code){
+  await cmd(0x05,l,r,c,code>>8,code&255);
+  st.km[kmIdx(l,r,c)]=code;
+}
+async function setEnc(l,id,cw,code){
+  await cmd(0x15,l,id,cw?1:0,code>>8,code&255);
+  st.enc[encIdx(l,id,cw)]=code;
+}
+
+/* ============================================================
+   매크로 인코딩 (VIA 매크로 형식)
+   ============================================================ */
+const TOK = {enter:0x28, tab:0x2B, esc:0x29, backspace:0x2A, space:0x2C, up:0x52, down:0x51, left:0x50, right:0x4F};
+function macroToText(bytes){
+  let s="", i=0;
+  while(i<bytes.length){
+    const b=bytes[i];
+    if(b===0x01){
+      const a=bytes[i+1];
+      if(a>=1 && a<=3){
+        const kc=bytes[i+2], name=Object.keys(TOK).find(k=>TOK[k]===kc);
+        if(a===1) s += name ? `{${name}}` : `{tap:${kc.toString(16)}}`;
+        else s += `{${a===2?"down":"up"}:${kc.toString(16)}}`;
+        i+=3; continue;
+      }
+      if(a===4){ let j=i+2, num=""; while(j<bytes.length && bytes[j]!==0x7C) num+=String.fromCharCode(bytes[j++]); s+=`{wait:${num}}`; i=j+1; continue; }
+      if(a>=5 && a<=7){ s+=`{raw:${[1,a,bytes[i+2],bytes[i+3]].map(x=>x.toString(16).padStart(2,"0")).join("")}}`; i+=4; continue; }
+    }
+    s+=String.fromCharCode(b); i++;
+  }
+  return s;
+}
+function textToMacro(text){
+  const out=[]; const re=/\{([a-z]+)(?::([0-9a-fA-F]+))?\}/y; let i=0;
+  while(i<text.length){
+    re.lastIndex=i; const m=re.exec(text);
+    if(m){
+      const [all,name,arg]=m;
+      if(TOK[name]!==undefined && !arg){ out.push(1,1,TOK[name]); }
+      else if(name==="wait" && arg){ out.push(1,4,...[...String(parseInt(arg,10))].map(c=>c.charCodeAt(0)),0x7C); }
+      else if((name==="tap"||name==="down"||name==="up") && arg){ out.push(1,{tap:1,down:2,up:3}[name],parseInt(arg,16)&255); }
+      else if(name==="raw" && arg){ for(let k=0;k<arg.length;k+=2) out.push(parseInt(arg.slice(k,k+2),16)); }
+      else throw new Error(`알 수 없는 특수 동작: ${all}`);
+      i+=all.length; continue;
+    }
+    const ch=text[i], c=ch.charCodeAt(0);
+    if(c===0x0A || c===0x09 || (c>=0x20 && c<=0x7E)) out.push(c);
+    else if(c===0x0D){}
+    else throw new Error(`"${ch}" 글자는 매크로로 입력할 수 없어요. 영문·숫자·기호만 가능합니다.`);
+    i++;
+  }
+  return out;
+}
+function macroPreview(i){
+  const m=st.macros[i]; if(!m||!m.length) return "(비어 있음)";
+  const t=macroToText(m).replace(/\n/g,"⏎"); return t.length>18?t.slice(0,18)+"…":t;
+}
+async function writeMacros(list){
+  const bytes=[]; list.forEach(m=>{ bytes.push(...m,0); });
+  if(bytes.length>st.macroSize) throw new Error("매크로 저장 공간이 부족해요. 내용을 줄여 주세요.");
+  for(let off=0; off<bytes.length; off+=28){
+    const chunk=bytes.slice(off,off+28);
+    await cmd(0x0F,off>>8,off&255,chunk.length,...chunk);
+  }
+  st.macros=list.map(m=>m.slice());
+}
+
+/* ============================================================
+   UI 공통
+   ============================================================ */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let toastT;
+function toast(msg,bad){ const t=$("#toast"); t.textContent=msg; t.className="toast show"+(bad?" bad":""); clearTimeout(toastT); toastT=setTimeout(()=>t.className="toast",2400); }
+async function busy(label,fn){ const b=$("#busy"); b.textContent=label; b.classList.remove("hidden"); try{ return await fn(); } finally{ b.classList.add("hidden"); } }
+
+function showTab(name){
+  document.querySelectorAll("#tabs button").forEach(b=>b.classList.toggle("on",b.dataset.tab===name));
+  ["keys","light","macro","backup"].forEach(t=>$("#tab-"+t).classList.toggle("hidden",t!==name));
+  if(name==="light") renderLight();
+  if(name==="macro") renderMacros();
+}
+document.querySelectorAll("#tabs button").forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
+
+/* ---------- 키 설정 화면 ---------- */
+function selCode(){
+  const s=st.sel, l=st.layer;
+  if(s.type==="key") return getKey(l,s.row,s.col);
+  return st.enc[encIdx(l,s.id,s.cw)];
+}
+function selName(){
+  const s=st.sel;
+  if(s.type==="key"){
+    const k=KNOBS.find(k=>k.press[0]===s.row&&k.press[1]===s.col);
+    return k ? k.name+" · 누르기" : `${s.row*4+s.col+1}번 키`;
+  }
+  return KNOBS[s.id].name+" · "+(s.cw?"오른쪽(시계방향)으로 돌리기":"왼쪽(반시계방향)으로 돌리기");
+}
+
+function renderLayers(){
+  const wrap=$("#layers");
+  let h=`<span class="lbl">레이어</span>`;
+  for(let l=0;l<st.layers;l++) h+=`<button data-l="${l}" class="${l===st.layer?"on":""}"><i style="background:${LAYER_COLORS[l%6]}"></i>${layerName(l)}</button>`;
+  wrap.innerHTML=h;
+  wrap.querySelectorAll("button").forEach(b=>b.onclick=()=>{ st.layer=+b.dataset.l; renderKeys(); });
+  // 레이어 이동 방법 안내
+  const big=getKey(st.layer,4,3), d=describe(big);
+  $("#legend").innerHTML = isLayerKey(big)
+    ? `💡 키보드의 <b>큰 노브를 누르면</b> 다음 레이어로 넘어가요 (${esc(d.big)}). 작은 노브 아래 불빛 색이 현재 레이어예요: ${LAYER_NAMES.map((n,i)=>`<span style="color:${LAYER_COLORS[i]}">●</span> ${n}`).join(" → ")}`
+    : `⚠️ 이 레이어에서는 큰 노브 누르기가 레이어 이동이 아니에요. 다른 레이어로 돌아가는 키가 하나는 있는지 확인하세요.`;
+}
+
+function capHTML(code, attrs, extraCls="", no=""){
+  const d=describe(code);
+  return `<button class="cap ${d.empty?"empty":""} ${extraCls}" ${attrs} title="${esc(d.big+" — "+d.small)}"><span class="no">${no}</span><span class="big">${esc(d.big)}</span><span class="small">${esc(d.small)}</span></button>`;
+}
+function renderDevice(){
+  const l=st.layer, s=st.sel;
+  let g=`<div class="grid">`;
+  for(let r=0;r<4;r++) for(let c=0;c<4;c++){
+    const on=s.type==="key"&&s.row===r&&s.col===c;
+    g+=capHTML(getKey(l,r,c), `data-r="${r}" data-c="${c}"`, on?"sel":"", r*4+c+1);
+  }
+  g+=`</div>`;
+  const knob=k=>{
+    const press=getKey(l,...k.press), dp=describe(press);
+    const ccw=describe(st.enc[encIdx(l,k.id,0)]), cw=describe(st.enc[encIdx(l,k.id,1)]);
+    const pOn=s.type==="key"&&s.row===k.press[0]&&s.col===k.press[1];
+    const tOn=cw=>s.type==="enc"&&s.id===k.id&&!!s.cw===cw;
+    return `<div class="knob ${k.size}">
+      <div class="name">${k.name}</div>
+      <button class="face ${pOn?"sel":""}" data-r="${k.press[0]}" data-c="${k.press[1]}" title="누르기: ${esc(dp.big)}"><span class="small">누르기</span><span class="big">${esc(dp.big)}</span></button>
+      <div class="turns">
+        <button class="turn ${tOn(false)?"sel":""}" data-e="${k.id}" data-cw="0" title="왼쪽으로 돌리기: ${esc(ccw.big)} ${esc(ccw.small)}">↺ ${esc(ccw.big)}</button>
+        <button class="turn ${tOn(true)?"sel":""}" data-e="${k.id}" data-cw="1" title="오른쪽으로 돌리기: ${esc(cw.big)} ${esc(cw.small)}">↻ ${esc(cw.big)}</button>
+      </div></div>`;
+  };
+  g+=`<div class="knobs"><div class="knobrow">${knob(KNOBS[0])}${knob(KNOBS[1])}</div>${knob(KNOBS[2])}</div>`;
+  const dev=$("#device"); dev.innerHTML=g; fitDevice();
+  dev.querySelectorAll("[data-r]").forEach(b=>b.onclick=()=>{ st.sel={type:"key",row:+b.dataset.r,col:+b.dataset.c}; stopListen(); renderKeys(); });
+  dev.querySelectorAll("[data-e]").forEach(b=>b.onclick=()=>{ st.sel={type:"enc",id:+b.dataset.e,cw:b.dataset.cw==="1"}; stopListen(); renderKeys(); });
+}
+
+function fitDevice(){
+  const wrap=$("#devwrap"), dev=$("#device"); if(!wrap||!dev) return;
+  dev.style.transform=""; wrap.style.height="";
+  const w=dev.offsetWidth, avail=wrap.clientWidth, sc=Math.min(1,avail/w);
+  dev.style.margin = sc<1 ? "6px 0 14px" : "";
+  dev.style.transform = sc<1 ? `scale(${sc})` : "";
+  wrap.style.height = sc<1 ? (dev.offsetHeight*sc+20)+"px" : "";
+}
+window.addEventListener("resize", fitDevice);
+function categories(){
+  const cats=[];
+  cats.push({id:"os", name:osName()+" 단축키", items: presets().map(([c,d])=>({code:c, desc:d}))});
+  cats.push({id:"media", name:"미디어·화면", items:[0xAE,0xAB,0xAC,0xA9,0xAA,0xA8,0xBB,0xBC,0xAD,0xBD,0xBE,0xC1,0xC2].map(c=>({code:c}))});
+  cats.push({id:"mouse", name:"마우스·스크롤", items:[0xD9,0xDA,0xDB,0xDC,0xD1,0xD2,0xD3,0xCD,0xCE,0xCF,0xD0].map(c=>({code:c}))});
+  const range=(a,b)=>Array.from({length:b-a+1},(_,i)=>a+i);
+  cats.push({id:"letters", name:"글자·숫자", items:range(0x04,0x27).map(c=>({code:c}))});
+  cats.push({id:"nav", name:"이동·편집", items:[0x28,0x29,0x2A,0x4C,0x2B,0x2C,0x52,0x51,0x50,0x4F,0x4A,0x4D,0x4B,0x4E,0x49,0x39].map(c=>({code:c}))});
+  cats.push({id:"fn", name:"F1~F24", items:[...range(0x3A,0x45),...range(0x68,0x73)].map(c=>({code:c}))});
+  cats.push({id:"sym", name:"기호", items:[0x2D,0x2E,0x2F,0x30,0x31,0x33,0x34,0x35,0x36,0x37,0x38].map(c=>({code:c}))});
+  cats.push({id:"num", name:"숫자패드", items:[...range(0x59,0x62),0x63,0x58,0x57,0x56,0x55,0x54,0x67,0x53].map(c=>({code:c}))});
+  cats.push({id:"mod", name:"보조키", items:range(0xE0,0xE7).map(c=>({code:c}))});
+  const lay=[]; for(let n=0;n<st.layers;n++){ lay.push({code:0x5200+n, desc:`누르면 ${layerName(n)} 레이어로 이동`}); }
+  for(let n=0;n<st.layers;n++){ lay.push({code:0x5220+n, desc:`누르고 있는 동안만 ${layerName(n)}`}); }
+  for(let n=0;n<st.layers;n++){ lay.push({code:0x5260+n, desc:`한 번 누르면 켜지고, 또 누르면 꺼짐`}); }
+  cats.push({id:"layer", name:"레이어", items:lay});
+  cats.push({id:"light", name:"조명", items:Object.keys(RGBK).map(c=>({code:+c}))});
+  if(st.macroCount) cats.push({id:"macro", name:"매크로", items:range(0,st.macroCount-1).map(i=>({code:0x7700+i}))});
+  cats.push({id:"etc", name:"비우기", items:[{code:0x0000, desc:"아무 동작 안 함"},{code:0x0001, desc:"아래 레이어(0 Red)의 키를 그대로 사용"}]});
+  return cats;
+}
+
+function renderPicker(){
+  const p=$("#picker"), code=selCode(), d=describe(code);
+  const cats=categories();
+  let items;
+  const q=st.query.trim().toLowerCase();
+  if(q){
+    const seen=new Set(); items=[];
+    cats.forEach(c=>c.items.forEach(it=>{ if(seen.has(it.code)) return; const dd=describe(it.code);
+      const hay=(dd.big+" "+dd.small+" "+(it.desc||"")+" "+(BASIC[it.code]?.[1]||"")).toLowerCase();
+      if(hay.includes(q)){ seen.add(it.code); items.push(it); } }));
+  } else items=(cats.find(c=>c.id===st.cat)||cats[0]).items;
+  const basicCat=["letters","nav","fn","sym","num"].includes(st.cat) || q;
+  p.innerHTML=`
+    <div class="target"><span class="pill">선택됨</span><b>${esc(selName())}</b></div>
+    <div class="target cur">${esc(layerName(st.layer))} 레이어 · 현재: <b style="color:var(--ink)">&nbsp;${esc(d.big)}</b>&nbsp;${esc(d.small)}</div>
+    <input class="search" id="q" placeholder="🔍 기능 찾기 (예: 복사, 볼륨, 캡처, F5)" value="${esc(st.query)}">
+    <div class="capture">
+      <button class="btn ${st.listening?"listening":""}" id="btnListen">${st.listening?"⌨️ 지금 컴퓨터 키보드에서 누르세요… (취소: 다시 클릭)":"⌨️ 컴퓨터 키보드로 눌러서 지정"}</button>
+    </div>
+    <div class="mods">함께 누를 키:
+      ${(OS==="win"?[["Ctrl",MOD.CTL,"Control"],["Shift",MOD.SFT,"Shift"],["Alt",MOD.ALT,"Alt"],["Win",MOD.GUI,"윈도우 키"]]:[["⌘",MOD.GUI,"Command"],["⌥",MOD.ALT,"Option"],["⌃",MOD.CTL,"Control"],["⇧",MOD.SFT,"Shift"]]).map(([s,m,t])=>`<button data-m="${m}" class="${st.mods&m?"on":""}" title="${t}">${s}</button>`).join("")}
+      <span>${st.mods?"→ 아래에서 글자/키를 고르면 <b>"+modSymbols(st.mods)+(OS==="win"?"":"+")+"키</b> 조합이 돼요":"(나만의 조합 단축키 만들기)"}</span>
+    </div>
+    <div class="cats">${cats.map(c=>`<button data-cat="${c.id}" class="${!q&&c.id===st.cat?"on":""}">${c.name}</button>`).join("")}</div>
+    <div class="opts">${items.length? items.map(it=>{ const dd=describe(it.code); const c2=(st.mods&&it.code>=0x04&&it.code<=0xA4)?(st.mods|it.code):it.code; const dd2=describe(c2);
+        return `<button class="opt ${c2===code?"cur":""}" data-code="${c2}"><span class="k">${esc(dd2.big)}</span><span class="d">${esc(it.desc||dd2.small)}</span></button>`; }).join("")
+      : `<div class="empty-pick">찾는 기능이 없어요.<br>"컴퓨터 키보드로 눌러서 지정"을 써 보세요.</div>`}</div>
+    ${st.sel.type==="enc"?`<div style="margin-top:12px;display:flex;gap:8px;align-items:center"><button class="btn small" id="swapDir">⇄ 이 노브의 돌리는 방향 서로 바꾸기</button><span class="hint">방향이 반대로 느껴질 때</span></div>`:""}
+  `;
+  const qi=$("#q"); qi.oninput=()=>{ st.query=qi.value; renderPicker(); const n=$("#q"); n.focus(); n.setSelectionRange(n.value.length,n.value.length); };
+  p.querySelectorAll("[data-cat]").forEach(b=>b.onclick=()=>{ st.cat=b.dataset.cat; st.query=""; renderPicker(); });
+  p.querySelectorAll("[data-m]").forEach(b=>b.onclick=()=>{ st.mods^=+b.dataset.m; renderPicker(); });
+  p.querySelectorAll("[data-code]").forEach(b=>b.onclick=()=>assign(+b.dataset.code));
+  $("#btnListen").onclick=()=>{ st.listening?stopListen():startListen(); };
+  const sw=$("#swapDir"); if(sw) sw.onclick=swapDir;
+}
+
+function renderKeys(){ renderLayers(); renderDevice(); renderPicker(); }
+
+function renderOS(){ document.querySelectorAll("#osSwitch button").forEach(b=>b.classList.toggle("on", b.dataset.os===OS)); }
+document.querySelectorAll("#osSwitch button").forEach(b=>b.onclick=()=>{
+  OS=b.dataset.os; try{ localStorage.setItem(OS_KEY,OS); }catch(e){}
+  renderOS(); if(st.t) renderKeys();
+  toast(OS==="win" ? "🪟 윈도우 모드: 윈도우 단축키 목록과 Ctrl/Alt/Win 표시로 바꿨어요" : "🍎 맥 모드: 맥 단축키 목록과 ⌘⌥⌃ 표시로 바꿨어요");
+});
+renderOS();
+
+function layerHasExit(l, exceptKey){
+  for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){
+    if(exceptKey && exceptKey[0]===r && exceptKey[1]===c) continue;
+    if(isLayerKey(getKey(l,r,c))) return true;
+  }
+  return false;
+}
+
+async function assign(code){
+  const s=st.sel, l=st.layer;
+  try{
+    if(s.type==="key"){
+      const old=getKey(l,s.row,s.col);
+      if(isLayerKey(old) && !isLayerKey(code) && !layerHasExit(l,[s.row,s.col])){
+        if(!confirm(`이 키는 ${layerName(l)} 레이어에서 다른 레이어로 이동하는 유일한 키예요.\n바꾸면 이 레이어에 갇힐 수 있어요 (이 도구로 언제든 다시 고칠 수는 있습니다).\n\n그래도 바꿀까요?`)) return;
+      }
+      await setKey(l,s.row,s.col,code);
+    } else await setEnc(l,s.id,s.cw,code);
+    st.mods=0;
+    const d=describe(code);
+    toast(`✓ 저장됨 — ${selName()} → ${d.big}${d.small&&!d.empty?" ("+d.small+")":""}`);
+    renderKeys();
+    const el = s.type==="key" ? document.querySelector(`.cap[data-r="${s.row}"][data-c="${s.col}"]`) : null;
+    if(el){ el.classList.add("flash"); }
+  }catch(e){ toast("저장 실패: "+e.message, true); }
+}
+
+async function swapDir(){
+  const id=st.sel.id, l=st.layer;
+  const a=st.enc[encIdx(l,id,0)], b=st.enc[encIdx(l,id,1)];
+  try{ await setEnc(l,id,0,b); await setEnc(l,id,1,a); toast("✓ 돌리는 방향을 바꿨어요"); renderKeys(); }
+  catch(e){ toast("실패: "+e.message,true); }
+}
+
+/* ---------- 컴퓨터 키보드로 눌러서 지정 ---------- */
+const CODE2HID = {Enter:0x28,Escape:0x29,Backspace:0x2A,Tab:0x2B,Space:0x2C,Minus:0x2D,Equal:0x2E,BracketLeft:0x2F,BracketRight:0x30,Backslash:0x31,IntlYen:0x31,
+  Semicolon:0x33,Quote:0x34,Backquote:0x35,Comma:0x36,Period:0x37,Slash:0x38,CapsLock:0x39,Insert:0x49,Home:0x4A,PageUp:0x4B,Delete:0x4C,End:0x4D,PageDown:0x4E,
+  ArrowRight:0x4F,ArrowLeft:0x50,ArrowDown:0x51,ArrowUp:0x52,NumLock:0x53,NumpadDivide:0x54,NumpadMultiply:0x55,NumpadSubtract:0x56,NumpadAdd:0x57,NumpadEnter:0x58,
+  NumpadDecimal:0x63,NumpadEqual:0x67,IntlBackslash:0x64,Lang1:0x90,Lang2:0x91,HangulMode:0x90,Hanja:0x91,PrintScreen:0x46};
+for(let i=0;i<26;i++) CODE2HID["Key"+String.fromCharCode(65+i)]=0x04+i;
+for(let i=1;i<=9;i++){ CODE2HID["Digit"+i]=0x1D+i; CODE2HID["Numpad"+i]=0x58+i; }
+CODE2HID.Digit0=0x27; CODE2HID.Numpad0=0x62;
+for(let i=1;i<=12;i++) CODE2HID["F"+i]=0x39+i;
+for(let i=13;i<=24;i++) CODE2HID["F"+i]=0x68+i-13;
+
+function onCapture(e){
+  if(!st.listening) return;
+  if(["Meta","Shift","Alt","Control","OS"].includes(e.key) && !CODE2HID[e.code]) return;
+  e.preventDefault(); e.stopPropagation();
+  const hid=CODE2HID[e.code];
+  if(!hid){ toast("이 키는 인식할 수 없어요. 목록에서 골라 주세요.",true); return; }
+  let code=hid;
+  if(e.metaKey) code|=MOD.GUI; if(e.altKey) code|=MOD.ALT; if(e.ctrlKey) code|=MOD.CTL; if(e.shiftKey) code|=MOD.SFT;
+  stopListen(); assign(code);
+}
+function startListen(){ st.listening=true; renderPicker(); window.addEventListener("keydown",onCapture,true); }
+function stopListen(){ if(!st.listening) return; st.listening=false; window.removeEventListener("keydown",onCapture,true); if(st.t) renderPicker(); }
+
+/* ---------- 조명 ---------- */
+const MATRIX_FX=["모두 끄기","단색","보조키 강조","위아래 그라데이션","좌우 그라데이션","숨쉬기","채도 띠","밝기 띠","채도 바람개비","밝기 바람개비","채도 나선","밝기 나선","전체 색 순환","좌우 색 순환","위아래 색 순환","안팎 색 순환","안팎 이중 순환","무지개 화살표","바람개비 순환","나선 순환","이중 등대","무지개 등대","무지개 바람개비"];
+const GLOW_FX=["모두 끄기","단색","숨쉬기 1","숨쉬기 2","숨쉬기 3","숨쉬기 4","무지개 1","무지개 2","무지개 3","소용돌이 1","소용돌이 2","소용돌이 3","소용돌이 4","소용돌이 5","소용돌이 6","뱀 1","뱀 2","뱀 3","뱀 4","뱀 5","뱀 6","나이트 1","나이트 2","나이트 3","크리스마스","그라데이션 1","그라데이션 2","그라데이션 3","그라데이션 4","그라데이션 5","그라데이션 6","그라데이션 7","그라데이션 8","그라데이션 9","그라데이션 10","RGB 테스트","교차","반짝임 1","반짝임 2","반짝임 3","반짝임 4","반짝임 5","반짝임 6"];
+function hsv2hex(h,s){ h=h/255*360; s=s/255; const f=n=>{ const k=(n+h/60)%6; return 1 - s*Math.max(0,Math.min(k,4-k,1)); }; return "#"+[f(5),f(3),f(1)].map(x=>Math.round(x*255).toString(16).padStart(2,"0")).join(""); }
+function hex2hs(hx){ const r=parseInt(hx.slice(1,3),16)/255,g=parseInt(hx.slice(3,5),16)/255,b=parseInt(hx.slice(5,7),16)/255; const mx=Math.max(r,g,b),mn=Math.min(r,g,b),d=mx-mn; let h=0;
+  if(d){ if(mx===r) h=((g-b)/d)%6; else if(mx===g) h=(b-r)/d+2; else h=(r-g)/d+4; } h=(h*60+360)%360; return [Math.round(h/360*255), Math.round(mx?d/mx*255:0)]; }
+
+function renderLight(){
+  const wrap=$("#lightPanels"); let h="";
+  const panel=(ch,title,desc,fx)=>{
+    const v=st.light[ch]; if(!v) return "";
+    const eff=v[2][0], opts=fx.map((n,i)=>`<option value="${i}" ${i===eff?"selected":""}>${n}</option>`).join("") + (eff>=fx.length?`<option value="${eff}" selected>효과 ${eff}</option>`:"");
+    return `<div class="card" data-ch="${ch}"><h3>${title}</h3><p class="hint" style="margin-top:-6px">${desc}</p>
+      <div class="field"><label>효과</label><select data-id="2">${opts}</select></div>
+      <div class="field"><label>밝기 <span>${Math.round(v[1][0]/2.55)}%</span></label><input type="range" min="0" max="255" value="${v[1][0]}" data-id="1"></div>
+      <div class="field"><label>속도 <span>${Math.round(v[3][0]/2.55)}%</span></label><input type="range" min="0" max="255" value="${v[3][0]}" data-id="3"></div>
+      <div class="field"><label>색상</label><input type="color" value="${hsv2hex(v[4][0],v[4][1])}" data-id="4"></div></div>`;
+  };
+  h+=panel(3,"키 백라이트","16개 키 아래의 RGB 조명",MATRIX_FX);
+  h+=panel(2,"노브 · 하단 조명","노브 아래 조명 (레이어 표시등과 함께 쓰일 수 있어요)",GLOW_FX);
+  wrap.innerHTML=h||`<div class="card">이 키보드에서 조명 설정을 읽을 수 없어요.</div>`;
+  wrap.querySelectorAll("[data-ch]").forEach(card=>{
+    const ch=+card.dataset.ch;
+    card.querySelectorAll("[data-id]").forEach(inp=>{
+      const id=+inp.dataset.id;
+      const apply=async(save)=>{
+        let vals;
+        if(id===4) vals=hex2hs(inp.value); else vals=[+inp.value];
+        st.light[ch][id]=vals;
+        if(inp.type==="range") inp.previousElementSibling.querySelector("span").textContent=Math.round(inp.value/2.55)+"%";
+        try{ await cmd(0x07,ch,id,...vals); if(save){ await cmd(0x09,ch,id); toast("✓ 조명 저장됨"); } }catch(e){ toast("실패: "+e.message,true); }
+      };
+      let t; inp.oninput=()=>{ clearTimeout(t); t=setTimeout(()=>apply(false),60); };
+      inp.onchange=()=>{ clearTimeout(t); apply(true); };
+    });
+  });
+}
+
+/* ---------- 매크로 ---------- */
+function renderMacros(){
+  const list=$("#mlist");
+  if(!st.macroCount){ list.innerHTML=`<p class="hint">이 키보드는 매크로를 지원하지 않아요.</p>`; return; }
+  list.innerHTML=st.macros.map((m,i)=>`<button data-i="${i}" class="${i===st.mSel?"on":""}"><b>M${i+1}</b><span>${esc(m.length?macroPreview(i):"비어 있음")}</span></button>`).join("");
+  list.querySelectorAll("button").forEach(b=>b.onclick=()=>{ st.mSel=+b.dataset.i; renderMacros(); });
+  $("#mtitle").textContent=`매크로 ${st.mSel+1}`;
+  $("#mtext").value=macroToText(st.macros[st.mSel]||[]);
+  $("#merr").textContent="";
+  const used=st.macros.reduce((a,m)=>a+m.length+1,0);
+  $("#mspace").textContent=`저장 공간 ${used} / ${st.macroSize} 바이트 사용 중`;
+}
+document.querySelectorAll("[data-tok]").forEach(b=>b.onclick=()=>{ const ta=$("#mtext"); const s=ta.selectionStart, e=ta.selectionEnd; ta.value=ta.value.slice(0,s)+b.dataset.tok+ta.value.slice(e); ta.focus(); ta.selectionStart=ta.selectionEnd=s+b.dataset.tok.length; });
+$("#mtext").oninput=()=>{ try{ textToMacro($("#mtext").value); $("#merr").textContent=""; }catch(e){ $("#merr").textContent=e.message; } };
+$("#msave").onclick=async()=>{
+  try{
+    const bytes=textToMacro($("#mtext").value);
+    const list=st.macros.map(m=>m.slice()); list[st.mSel]=bytes;
+    await busy("매크로 저장 중…",()=>writeMacros(list));
+    toast(`✓ 매크로 ${st.mSel+1} 저장됨`); renderMacros();
+  }catch(e){ $("#merr").textContent=e.message; toast("저장 실패",true); }
+};
+$("#mclear").onclick=()=>{ $("#mtext").value=""; $("#merr").textContent=""; };
+
+/* ---------- 백업 · 초기화 ---------- */
+function snapshot(){
+  return {app:"cybrix16-mapper", version:1, savedAt:new Date().toISOString(), layers:st.layers,
+    keymap:st.km.map(hex), encoders:st.enc.map(hex), macros:st.macros.map(m=>macroToText(m)), lighting:st.light};
+}
+function downloadBackup(){
+  const blob=new Blob([JSON.stringify(snapshot(),null,1)],{type:"application/json"});
+  const a=document.createElement("a"); const d=new Date();
+  a.href=URL.createObjectURL(blob); a.download=`cybrix16-설정-${d.getFullYear()}${String(d.getMonth()+1).padStart(2,"0")}${String(d.getDate()).padStart(2,"0")}-${String(d.getHours()).padStart(2,"0")}${String(d.getMinutes()).padStart(2,"0")}.json`;
+  a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+}
+$("#bkSave").onclick=()=>{ downloadBackup(); toast("✓ 백업 파일을 저장했어요 (다운로드 폴더)"); };
+$("#bkLoad").onclick=()=>$("#bkFile").click();
+$("#bkFile").onchange=async e=>{
+  const f=e.target.files[0]; e.target.value=""; if(!f) return;
+  try{
+    const j=JSON.parse(await f.text());
+    if(j.app!=="cybrix16-mapper") throw new Error("이 도구에서 저장한 백업 파일이 아니에요.");
+    if(!confirm(`${new Date(j.savedAt).toLocaleString("ko-KR")}에 저장한 설정으로 덮어쓸까요?`)) return;
+    await busy("설정 불러오는 중…", async()=>{
+      const km=j.keymap.map(x=>parseInt(x,16));
+      for(let l=0;l<Math.min(st.layers,j.layers);l++) for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){
+        const v=km[kmIdx(l,r,c)]; if(v!==undefined && v!==getKey(l,r,c)) await setKey(l,r,c,v);
+      }
+      const en=j.encoders.map(x=>parseInt(x,16));
+      for(let l=0;l<Math.min(st.layers,j.layers);l++) for(let id=0;id<3;id++) for(const cw of [0,1]){
+        const v=en[encIdx(l,id,cw)]; if(v!==undefined && v!==st.enc[encIdx(l,id,cw)]) await setEnc(l,id,cw,v);
+      }
+      if(j.macros && st.macroCount){ const list=st.macros.map((m,i)=> j.macros[i]!==undefined ? textToMacro(j.macros[i]) : m); await writeMacros(list); }
+      if(j.lighting) for(const ch of [2,3]) if(j.lighting[ch] && st.light[ch]) for(const id of [1,2,3,4]){
+        const v=j.lighting[ch][id]; if(v){ await cmd(0x07,ch,id,...v); await cmd(0x09,ch,id); st.light[ch][id]=v; }
+      }
+    });
+    toast("✓ 설정을 불러왔어요"); renderKeys();
+  }catch(err){ toast("불러오기 실패: "+err.message,true); }
+};
+$("#rsKeys").onclick=async()=>{
+  if(!confirm("모든 레이어의 키와 노브 설정을 처음 상태로 되돌릴까요?\n(먼저 현재 설정을 백업 파일로 저장합니다)")) return;
+  downloadBackup();
+  try{ await busy("초기화 중…", async()=>{ await cmd(0x06); await loadAll(); }); toast("✓ 키·노브 설정을 초기화했어요"); renderKeys(); }
+  catch(e){ toast("실패: "+e.message,true); }
+};
+$("#rsMacros").onclick=async()=>{
+  if(!confirm("모든 매크로를 지울까요?\n(먼저 현재 설정을 백업 파일로 저장합니다)")) return;
+  downloadBackup();
+  try{ await busy("지우는 중…", async()=>{ await cmd(0x10); await loadMacros(); }); toast("✓ 매크로를 모두 지웠어요"); }
+  catch(e){ toast("실패: "+e.message,true); }
+};
+
+/* ============================================================
+   연결
+   ============================================================ */
+function setStatus(kind,text){ $("#dot").className="dot "+(kind||""); $("#statusText").textContent=text; }
+
+async function start(transport, demo, label){
+  st.t=transport; st.demo=demo;
+  await busy("키보드 설정 읽는 중…", loadAll);
+  setStatus(demo?"demo":"on", label);
+  $("#welcome").classList.add("hidden"); $("#tabs").classList.remove("hidden"); $("#btnDisconnect").classList.remove("hidden");
+  $("#btnDisconnect").textContent = demo ? "체험 모드 종료" : "연결 끊기";
+  showTab("keys"); renderKeys();
+}
+async function openDevice(dev){
+  if(!dev.opened) await dev.open();
+  await start(new HidTransport(dev), false, "Kiiboom Cybrix 16 연결됨");
+  st.dev=dev;
+}
+function resetUI(msg){
+  stopListen();
+  st.t=null; st.dev=null; setStatus("", "연결 안 됨");
+  $("#welcome").classList.remove("hidden"); $("#tabs").classList.add("hidden"); $("#btnDisconnect").classList.add("hidden");
+  ["keys","light","macro","backup"].forEach(t=>$("#tab-"+t).classList.add("hidden"));
+  if(msg){ const n=$("#connErr"); n.textContent=msg; n.classList.remove("hidden"); }
+}
+function showErr(e){ const n=$("#connErr"); n.innerHTML="연결하지 못했어요: "+esc(e.message||e)+"<br>케이블을 다시 꽂거나, usevia.app 등 다른 설정 프로그램이 열려 있다면 닫고 다시 시도해 보세요."; n.classList.remove("hidden"); }
+
+$("#btnConnect").onclick=async()=>{
+  $("#connErr").classList.add("hidden");
+  try{
+    const devs=await navigator.hid.requestDevice({filters:[{vendorId:VID, productId:PID, usagePage:0xFF60, usage:0x61}]});
+    if(!devs.length) return;
+    await openDevice(devs[0]);
+  }catch(e){ showErr(e); }
+};
+$("#btnDemo").onclick=()=>start(new FakeTransport(), true, "체험 모드 (실제 키보드에 저장되지 않음)");
+$("#btnDisconnect").onclick=async()=>{ try{ if(st.dev) await st.dev.close(); }catch(e){} resetUI(); };
+
+if(!("hid" in navigator)){
+  $("#noHid").classList.remove("hidden"); $("#btnConnect").disabled=true; $("#btnConnect").style.opacity=.4;
+} else {
+  navigator.hid.addEventListener("disconnect", e=>{ if(st.dev && e.device===st.dev) resetUI("키보드 연결이 끊어졌어요. 다시 꽂고 '키보드 연결'을 눌러 주세요."); });
+  navigator.hid.addEventListener("connect", async e=>{ if(!st.t && e.device.vendorId===VID && e.device.productId===PID && e.device.collections.some(c=>c.usagePage===0xFF60)){ try{ await openDevice(e.device); }catch(err){} } });
+  // 이전에 허용한 키보드가 꽂혀 있으면 자동 연결
+  navigator.hid.getDevices().then(async ds=>{
+    const d=ds.find(d=>d.vendorId===VID && d.productId===PID && d.collections.some(c=>c.usagePage===0xFF60));
+    if(d){ try{ await openDevice(d); }catch(e){ showErr(e); } }
+  });
+}
+</script>
+</body>
+</html>
